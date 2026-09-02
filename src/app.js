@@ -10,6 +10,8 @@ const gatewayIdentity = require('./middleware/gatewayIdentity.middleware');
 const apiRoutes = require('./routes');
 const errorHandler = require('./middleware/error.middleware');
 
+const pingRoute = require('./routes/ping.route');
+
 const app = express();
 
 app.disable('x-powered-by');
@@ -39,6 +41,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Lightweight ping route mounted at the root for easy local checks
+app.use('/ping', pingRoute);
+
 // IAM JWT is verified in the API Gateway.
 // Customer Engagement consumes trusted x-user-* headers from the Gateway.
 app.use(gatewayIdentity);
@@ -51,7 +56,7 @@ app.use(basePath, apiRoutes);
 app.use((req, res) => {
   res.status(404).json({
     isSuccess: false,
-    errorMessege: `No Customer Engagement route matches ${req.method} ${req.originalUrl}`,
+    errorMessage: `No Customer Engagement route matches ${req.method} ${req.originalUrl}`,
     exceptionDetail: null,
     dataBundle: null,
     errorShow: `No Customer Engagement route matches ${req.method} ${req.originalUrl}`,
