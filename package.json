@@ -11,12 +11,13 @@
   "dependencies": {
     "ajv-draft-04": "^1.0.0",
     "ajv-formats": "^3.0.1",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.3",
     "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.24.5",
-    "morgan": "^1.10.0",
+    "morgan": "^1.12.1",
     "uuid": "^11.0.3"
   },
   "engines": {
