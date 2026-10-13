@@ -8,6 +8,7 @@ const gatewayIdentity = require('./middleware/gatewayIdentity.middleware');
 const errorHandler = require('./middleware/error.middleware');
 
 const troubleTicketRoutes = require('./APIs/createTroubleTicket/routes/troubleTicketRoutes');
+const listTroubleTicketRoutes = require('./APIs/listTroubleTicket/routes/listTroubleTicketRoutes');
 
 const app = express();
 
@@ -27,7 +28,8 @@ app.get('/health', (req, res) => {
 app.use(
   '/tmf-api/troubleTicket/v4/troubleTicket',
   gatewayIdentity,
-  troubleTicketRoutes
+  troubleTicketRoutes,
+  listTroubleTicketRoutes
 );
 
 app.use((req, res, next) => {
