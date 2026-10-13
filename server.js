@@ -1,21 +1,34 @@
 require('dotenv').config();
 
 const app = require('./src/app');
-const { connectDatabase } = require('./src/config/db');
+const connectDB = require('./src/config/db');
 
-const PORT = Number(process.env.PORT || 3003);
+const PORT = process.env.PORT || 3009;
 
 async function start() {
-  try {
-    await connectDatabase();
-
-    app.listen(PORT, () => {
-      console.log(`OmniChannel Customer Engagement Service listening on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('Failed to start Customer Engagement Service:', err.message);
-    process.exit(1);
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not set in .env');
   }
+
+  if (!process.env.PUBLIC_BASE_URL) {
+    throw new Error('PUBLIC_BASE_URL is not set in .env');
+  }
+
+  await connectDB();
+
+  const server = app.listen(PORT, () => {
+    console.log(
+      `[SERVER] Customer Engagement Service running on port ${PORT}`
+    );
+  });
+
+  server.on('error', (err) => {
+    console.error('[SERVER]', err.message);
+    process.exit(1);
+  });
 }
 
-start();
+start().catch((err) => {
+  console.error('[STARTUP]', err.message);
+  process.exit(1);
+});
