@@ -5,10 +5,6 @@ const { createTroubleTicketHandler } = require(
   '../controllers/troubleTicketController'
 );
 
-const { authenticate } = require(
-  '../../../middleware/authMiddleware'
-);
-
 router.post(
   '/',
   authenticate,

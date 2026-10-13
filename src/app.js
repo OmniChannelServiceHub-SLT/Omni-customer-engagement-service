@@ -1,16 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 
-const requestLogger = require('./middleware/requestLogger');
+const requestId = require('./middleware/requestId.middleware');
 
-const errorHandler = require('./middleware/errorHandler');
+const gatewayIdentity = require('./middleware/gatewayIdentity.middleware');
+
+const errorHandler = require('./middleware/error.middleware');
 
 const troubleTicketRoutes = require('./APIs/createTroubleTicket/routes/troubleTicketRoutes');
 
 const app = express();
 
 app.use(cors());
-app.use(requestLogger);
+
+app.use(requestId);
+
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', (req, res) => {
@@ -20,15 +24,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('/tmf-api/troubleTicket/v4/troubleTicket', troubleTicketRoutes);
+app.use(
+  '/tmf-api/troubleTicket/v4/troubleTicket',
+  gatewayIdentity,
+  troubleTicketRoutes
+);
 
-app.use((req, res) => {
-  res.status(404).json({
-    error: {
-      code: 'NOT_FOUND',
-      reason: 'Endpoint not found',
-    },
-  });
+app.use((req, res, next) => {
+  const err = new Error('Endpoint not found');
+  err.status = 404;
+  err.code = 'NOT_FOUND';
+  next(err);
 });
 
 app.use(errorHandler);

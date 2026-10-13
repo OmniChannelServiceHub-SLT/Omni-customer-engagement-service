@@ -6,10 +6,6 @@ const connectDB = require('./src/config/db');
 const PORT = process.env.PORT || 3009;
 
 async function start() {
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not set in .env');
-  }
-
   if (!process.env.PUBLIC_BASE_URL) {
     throw new Error('PUBLIC_BASE_URL is not set in .env');
   }
