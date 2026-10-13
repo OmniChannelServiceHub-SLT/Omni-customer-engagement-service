@@ -5,10 +5,6 @@ const { createTroubleTicketHandler } = require(
   '../controllers/troubleTicketController'
 );
 
-router.post(
-  '/',
-  authenticate,
-  createTroubleTicketHandler
-);
+router.post('/', createTroubleTicketHandler);
 
 module.exports = router;
