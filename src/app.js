@@ -46,6 +46,28 @@ app.use(
   notificationDetailsRoutes
 );
 
+// Gateway alias: createTroubleTicket + listTroubleTicket
+app.use(
+  '/tmf-api/communicationManagement/v4/troubleTicket',
+  gatewayIdentity,
+  troubleTicketRoutes,
+  listTroubleTicketRoutes
+);
+
+// Gateway alias: createServiceRequest
+app.use(
+  '/tmf-api/communicationManagement/v4/serviceRequests',
+  gatewayIdentity,
+  serviceRequestRoutes
+);
+
+// Gateway alias: NotificationDetails
+app.use(
+  '/tmf-api/communicationManagement/v4/NotificationDetails',
+  gatewayIdentity,
+  notificationDetailsRoutes
+);
+
 app.use((req, res, next) => {
   const err = new Error('Endpoint not found');
   err.status = 404;
