@@ -9,6 +9,7 @@ const errorHandler = require('./middleware/error.middleware');
 
 const troubleTicketRoutes = require('./APIs/createTroubleTicket/routes/troubleTicketRoutes');
 const listTroubleTicketRoutes = require('./APIs/listTroubleTicket/routes/listTroubleTicketRoutes');
+const serviceRequestRoutes = require('./APIs/createServiceRequest/routes/serviceRequestRoutes');
 
 const app = express();
 
@@ -30,6 +31,12 @@ app.use(
   gatewayIdentity,
   troubleTicketRoutes,
   listTroubleTicketRoutes
+);
+
+app.use(
+  '/api/serviceRequests',
+  gatewayIdentity,
+  serviceRequestRoutes
 );
 
 app.use((req, res, next) => {
