@@ -10,6 +10,7 @@ const errorHandler = require('./middleware/error.middleware');
 const troubleTicketRoutes = require('./APIs/createTroubleTicket/routes/troubleTicketRoutes');
 const listTroubleTicketRoutes = require('./APIs/listTroubleTicket/routes/listTroubleTicketRoutes');
 const serviceRequestRoutes = require('./APIs/createServiceRequest/routes/serviceRequestRoutes');
+const notificationDetailsRoutes = require('./APIs/NotificationDetails/routes/notificationDetailsRoutes');
 
 const app = express();
 
@@ -37,6 +38,12 @@ app.use(
   '/api/serviceRequests',
   gatewayIdentity,
   serviceRequestRoutes
+);
+
+app.use(
+  '/api/SystemMonitor/NotificationDetails',
+  gatewayIdentity,
+  notificationDetailsRoutes
 );
 
 app.use((req, res, next) => {
