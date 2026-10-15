@@ -2,10 +2,6 @@ const { listTroubleTicket } = require(
   '../services/listTroubleTicketService'
 );
 
-const { toTmfResponse } = require(
-  '../mappers/listTroubleTicketMapper'
-);
-
 const supportedStatuses = [
   'acknowledged',
   'rejected',
@@ -109,15 +105,6 @@ async function listTroubleTicketHandler(req, res, next) {
       100
     );
 
-    if (req.headers['x-response-format'] === 'legacy') {
-      const err = new Error(
-        'Legacy ViewFaultList mapping is not implemented yet'
-      );
-      err.status = 501;
-      err.code = 'LEGACY_MAPPING_NOT_IMPLEMENTED';
-      throw err;
-    }
-
     const { records, totalCount } = await listTroubleTicket({
       status,
       relatedPartyId,
@@ -129,7 +116,7 @@ async function listTroubleTicketHandler(req, res, next) {
     res.setHeader('X-Result-Count', String(records.length));
 
     return res.status(200).json(
-      toTmfResponse(records)
+      records.map((ticket) => ticket.toJSON())
     );
   } catch (err) {
     next(err);
