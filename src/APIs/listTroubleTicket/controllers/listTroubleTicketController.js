@@ -1,6 +1,7 @@
-const { listTroubleTicket } = require(
-  '../services/listTroubleTicketService'
-);
+const {
+  listTroubleTicket,
+  retrieveTroubleTicket,
+} = require('../services/listTroubleTicketService');
 
 const supportedStatuses = [
   'acknowledged',
@@ -13,6 +14,35 @@ const supportedStatuses = [
   'resolved',
 ];
 
+const selectableFields = new Set([
+  'id',
+  'href',
+  '@type',
+  '@baseType',
+  '@schemaLocation',
+  'name',
+  'description',
+  'severity',
+  'ticketType',
+  'priority',
+  'externalId',
+  'status',
+  'creationDate',
+  'lastUpdate',
+  'expectedResolutionDate',
+  'requestedResolutionDate',
+  'resolutionDate',
+  'statusChangeDate',
+  'statusChangeReason',
+  'channel',
+  'relatedParty',
+  'relatedEntity',
+  'note',
+  'attachment',
+  'statusChange',
+  'troubleTicketRelationship',
+]);
+
 function invalidRequest(message) {
   const err = new Error(message);
   err.status = 400;
@@ -20,7 +50,42 @@ function invalidRequest(message) {
   return err;
 }
 
-function readInteger(value, defaultValue, name, minimum, maximum) {
+function checkQueryNames(query, allowedNames) {
+  const allowed = new Set(allowedNames);
+
+  for (const key of Object.keys(query)) {
+    if (!allowed.has(key)) {
+      throw invalidRequest(
+        `Unsupported query parameter: ${key}`
+      );
+    }
+  }
+}
+
+function readString(value, name) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    typeof value !== 'string' ||
+    !value.trim()
+  ) {
+    throw invalidRequest(
+      `${name} must be a non-empty string`
+    );
+  }
+
+  return value;
+}
+
+function readInteger(
+  value,
+  defaultValue,
+  name,
+  minimum,
+  maximum
+) {
   if (value === undefined) {
     return defaultValue;
   }
@@ -29,7 +94,9 @@ function readInteger(value, defaultValue, name, minimum, maximum) {
     typeof value !== 'string' ||
     !/^\d+$/.test(value)
   ) {
-    throw invalidRequest(`${name} must be an integer`);
+    throw invalidRequest(
+      `${name} must be an integer`
+    );
   }
 
   const number = Number(value);
@@ -47,45 +114,99 @@ function readInteger(value, defaultValue, name, minimum, maximum) {
   return number;
 }
 
+function readFields(value) {
+  if (value === undefined) {
+    return null;
+  }
+
+  readString(value, 'fields');
+
+  const fields = value
+    .split(',')
+    .map((field) => field.trim());
+
+  for (const field of fields) {
+    if (!selectableFields.has(field)) {
+      throw invalidRequest(
+        `Unsupported response field: ${field}`
+      );
+    }
+  }
+
+  return [...new Set(fields)];
+}
+
+function serializeTicket(ticket, fields) {
+  const json = ticket.toJSON();
+
+  if (!fields) {
+    return json;
+  }
+
+  // Always retain resource identity.
+  const selected = {
+    id: json.id,
+    href: json.href,
+  };
+
+  for (const field of fields) {
+    if (
+      Object.prototype.hasOwnProperty.call(json, field)
+    ) {
+      selected[field] = json[field];
+    }
+  }
+
+  return selected;
+}
+
 async function listTroubleTicketHandler(req, res, next) {
   try {
-    const allowedQueries = new Set([
+    checkQueryNames(req.query, [
+      'id',
       'status',
       'relatedParty.id',
+      'ticketType',
+      'description',
+      'severity',
       'offset',
       'limit',
+      'fields',
     ]);
 
-    for (const key of Object.keys(req.query)) {
-      if (!allowedQueries.has(key)) {
-        throw invalidRequest(
-          `Unsupported query parameter: ${key}`
-        );
-      }
-    }
+    const id = readString(req.query.id, 'id');
 
-    const status = req.query.status;
-    const relatedPartyId = req.query['relatedParty.id'];
+    const status = readString(
+      req.query.status,
+      'status'
+    );
+
+    const relatedPartyId = readString(
+      req.query['relatedParty.id'],
+      'relatedParty.id'
+    );
+
+    const ticketType = readString(
+      req.query.ticketType,
+      'ticketType'
+    );
+
+    const description = readString(
+      req.query.description,
+      'description'
+    );
+
+    const severity = readString(
+      req.query.severity,
+      'severity'
+    );
 
     if (
       status !== undefined &&
-      (
-        typeof status !== 'string' ||
-        !supportedStatuses.includes(status)
-      )
-    ) {
-      throw invalidRequest('Invalid trouble ticket status');
-    }
-
-    if (
-      relatedPartyId !== undefined &&
-      (
-        typeof relatedPartyId !== 'string' ||
-        !relatedPartyId.trim()
-      )
+      !supportedStatuses.includes(status)
     ) {
       throw invalidRequest(
-        'relatedParty.id must be a non-empty string'
+        'Invalid trouble ticket status'
       );
     }
 
@@ -105,22 +226,70 @@ async function listTroubleTicketHandler(req, res, next) {
       100
     );
 
-    const { records, totalCount } = await listTroubleTicket({
-      status,
-      relatedPartyId,
-      offset,
-      limit,
-    });
+    const fields = readFields(req.query.fields);
 
-    res.setHeader('X-Total-Count', String(totalCount));
-    res.setHeader('X-Result-Count', String(records.length));
+    const { records, totalCount } =
+      await listTroubleTicket({
+        id,
+        status,
+        relatedPartyId,
+        ticketType,
+        description,
+        severity,
+        offset,
+        limit,
+      });
+
+    res.setHeader(
+      'X-Total-Count',
+      String(totalCount)
+    );
+
+    res.setHeader(
+      'X-Result-Count',
+      String(records.length)
+    );
 
     return res.status(200).json(
-      records.map((ticket) => ticket.toJSON())
+      records.map((ticket) =>
+        serializeTicket(ticket, fields)
+      )
     );
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { listTroubleTicketHandler };
+async function retrieveTroubleTicketHandler(req, res, next) {
+  try {
+    checkQueryNames(req.query, ['fields']);
+
+    const fields = readFields(req.query.fields);
+
+    const ticket = await retrieveTroubleTicket(
+      req.params.id
+    );
+
+    if (!ticket) {
+      const err = new Error(
+        'Trouble ticket not found'
+      );
+
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+
+      throw err;
+    }
+
+    return res.status(200).json(
+      serializeTicket(ticket, fields)
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  listTroubleTicketHandler,
+  retrieveTroubleTicketHandler,
+};
