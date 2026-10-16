@@ -11,6 +11,7 @@ const troubleTicketRoutes = require('./APIs/createTroubleTicket/routes/troubleTi
 const listTroubleTicketRoutes = require('./APIs/listTroubleTicket/routes/listTroubleTicketRoutes');
 const serviceRequestRoutes = require('./APIs/createServiceRequest/routes/serviceRequestRoutes');
 const notificationDetailsRoutes = require('./APIs/NotificationDetails/routes/notificationDetailsRoutes');
+const pushNotificationRoutes = require('./APIs/PushNotification/routes/pushNotificationRoutes');
 
 const app = express();
 
@@ -44,6 +45,12 @@ app.use(
   '/api/SystemMonitor/NotificationDetails',
   gatewayIdentity,
   notificationDetailsRoutes
+);
+
+app.use(
+  '/tmf-api/communicationManagement/v4/communicationMessage',
+  gatewayIdentity,
+  pushNotificationRoutes
 );
 
 // Gateway alias: createTroubleTicket + listTroubleTicket
