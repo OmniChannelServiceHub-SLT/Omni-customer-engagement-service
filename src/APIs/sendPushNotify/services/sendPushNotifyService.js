@@ -6,7 +6,7 @@ const { validateCommunicationMessage } = require(
   '../../../schemas/communicationMessageValidator'
 );
 
-async function createPushNotification(payload) {
+async function sendPushNotify(payload) {
   validateCommunicationMessage(payload);
 
   return CommunicationMessage.create({
@@ -16,6 +16,4 @@ async function createPushNotification(payload) {
   });
 }
 
-module.exports = {
-  createPushNotification,
-};
+module.exports = { sendPushNotify };
