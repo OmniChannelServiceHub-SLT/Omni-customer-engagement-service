@@ -59,10 +59,18 @@ function validateCommunicationMessage(payload) {
 
   // Delivery state/times belong to the service/provider.
   for (const field of [
-    'state',
     'sendTime',
     'sendTimeComplete',
   ]) {
+    if (
+  payload.state !== undefined &&
+  payload.state !== 'initial'
+) {
+  throw invalidRequest(
+    'A new communication message must have state initial'
+  );
+}
+
     if (
       Object.prototype.hasOwnProperty.call(payload, field)
     ) {
